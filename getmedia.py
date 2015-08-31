@@ -9,7 +9,7 @@ import shutil
 import exifread
 import threading
 
-LOCAL_DIR = "/Users/andrew/Pictures"
+LOCAL_DIR = "/mnt/media/Photos/CBVTimelapse"
 TMP_DIR = "/tmp"
 BLACK_THRESHOLD = 1000.0
 CONVERT = "convert"
@@ -17,7 +17,7 @@ BUCKET = "timelapse.capebernier.com.au"
 AWS_KEY = ""
 AWS_SECRET = ""
 REGION = "s3-ap-southeast-2.amazonaws.com"
-BASE_DEST = "/Volumes/Data/Photos/CBVTimelapse/"
+BASE_DEST = "/mnt/media/Photos/CBVTimelapse/"
 
 def hello():
     print "hello"
