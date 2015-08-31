@@ -129,12 +129,10 @@ def get_media(dir_list):
                     print "http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo)
                     resp = requests.get("http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo), stream=True)
                     print resp.status_code
-                    print resp.headers["last-modified"]
-                    t = time.strftime("%Y/%m/%d/%H/%M%S.JPG",
-                                      time.strptime(resp.headers["last-modified"], "%a, %d %b %Y %H:%M:%S %Z"))
+
                     if resp.status_code == 200:
-                        path = "{}/{}".format(LOCAL_DIR, t)
-                        tmp_path = "{}/tmpfile.jpg"
+
+                        tmp_path = "{}/tmpfile.jpg".format(TMP_DIR)
                         print "Writing to {}".format(tmp_path)
                         #Write to temp file
                         with open(tmp_path, 'wb') as f:
@@ -145,6 +143,8 @@ def get_media(dir_list):
                         if img_black(tmp_path):
                             print ("Too black, deleting {}".format(path))
                         else:
+                            t = get_created_path(tmp_path)
+                            path = "{}/{}".format(LOCAL_DIR, t)
                             p = os.path.join(LOCAL_DIR, os.path.dirname(path))
                             try:
                                 os.makedirs(p)
