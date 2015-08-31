@@ -128,14 +128,24 @@ def get_media(dir_list):
                     resp = requests.get("http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo), stream=True)
                     print resp.status_code
                     print resp.headers["last-modified"]
-                    t = time.strftime("%Y%m%d-%H%M%S",
+                    t = time.strftime("%Y/%m/%d/%H/%M%S.JPG",
                                       time.strptime(resp.headers["last-modified"], "%a, %d %b %Y %H:%M:%S %Z"))
                     if resp.status_code == 200:
-                        path = "{}/{}.JPG".format(LOCAL_DIR, t)
+                        path = "{}/{}".format(LOCAL_DIR, t)
                         print "Writing to {}".format(path)
+                        p = os.path.join(LOCAL_DIR, os.path.dirname(path))
+                        try:
+                            os.makedirs(p)
+                        except:
+                            pass
                         with open(path, 'wb') as f:
                             for chunk in resp:
                                 f.write(chunk)
+                        f.close()
+                        # Delete image if black
+                        if img_black(path):
+                            print ("Too black, deleting {}".format(path))
+                            os.remove(path)
 
 
 #get_media(get_media_dirs())
