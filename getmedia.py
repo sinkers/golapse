@@ -10,6 +10,7 @@ import exifread
 import threading
 
 LOCAL_DIR = "/Users/andrew/Pictures"
+TMP_DIR = "/tmp"
 BLACK_THRESHOLD = 1000.0
 CONVERT = "convert"
 BUCKET = "timelapse.capebernier.com.au"
@@ -58,7 +59,8 @@ def img_black(img):
     #Detect if an image is all black
     cmd = [CONVERT, img, '-format', '"%[mean]"', 'info:']
     try:
-        result = float(subprocess.check_output(cmd)[1:-1])
+        # Note the output from convert may vary a bit, TODO add regex
+        result = float(subprocess.check_output(cmd)[1:-2])
         if result < BLACK_THRESHOLD:
             return True
         else:
@@ -132,20 +134,25 @@ def get_media(dir_list):
                                       time.strptime(resp.headers["last-modified"], "%a, %d %b %Y %H:%M:%S %Z"))
                     if resp.status_code == 200:
                         path = "{}/{}".format(LOCAL_DIR, t)
-                        print "Writing to {}".format(path)
-                        p = os.path.join(LOCAL_DIR, os.path.dirname(path))
-                        try:
-                            os.makedirs(p)
-                        except:
-                            pass
-                        with open(path, 'wb') as f:
+                        tmp_path = "{}/tmpfile.jpg"
+                        print "Writing to {}".format(tmp_path)
+                        #Write to temp file
+                        with open(tmp_path, 'wb') as f:
                             for chunk in resp:
                                 f.write(chunk)
                         f.close()
                         # Delete image if black
-                        if img_black(path):
+                        if img_black(tmp_path):
                             print ("Too black, deleting {}".format(path))
-                            os.remove(path)
+                        else:
+                            p = os.path.join(LOCAL_DIR, os.path.dirname(path))
+                            try:
+                                os.makedirs(p)
+                                print "Copy to {}".format(path)
+                                shutil.copy2(tmp_path, path)
+                                # Note tmpfile just gets written over on the next one
+                            except:
+                                pass
 
 
 #get_media(get_media_dirs())
