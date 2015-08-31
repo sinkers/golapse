@@ -1,0 +1,4 @@
+requests
+wireless
+exifread
+boto
