@@ -141,7 +141,7 @@ def get_media(dir_list):
                         f.close()
                         # Delete image if black
                         if img_black(tmp_path):
-                            print ("Too black, deleting {}".format(path))
+                            print ("Image too black")
                         else:
                             t = get_created_path(tmp_path)
                             path = "{}/{}".format(LOCAL_DIR, t)
