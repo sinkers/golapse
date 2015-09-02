@@ -144,15 +144,15 @@ def get_media(dir_list):
                             print ("Image too black")
                         else:
                             t = get_created_path(tmp_path)
-                            path = "{}/{}".format(LOCAL_DIR, t)
-                            p = os.path.join(LOCAL_DIR, os.path.dirname(path))
+			    path = "{}/{}".format(LOCAL_DIR, t)
+	                    p = os.path.join(LOCAL_DIR, os.path.dirname(path))
                             try:
                                 os.makedirs(p)
-                                print "Copy to {}".format(path)
-                                shutil.copy2(tmp_path, path)
                                 # Note tmpfile just gets written over on the next one
                             except:
                                 pass
+			    print "Copy to {}".format(path)
+                            shutil.copy2(tmp_path, path)
 
 
-#get_media(get_media_dirs())
+get_media(get_media_dirs())
