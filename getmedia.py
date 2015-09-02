@@ -8,16 +8,18 @@ import os
 import shutil
 import exifread
 import threading
+import goprohero
 
-LOCAL_DIR = "/mnt/media/Photos/CBVTimelapse"
+LOCAL_DIR = "/Volumes/Data/Photos/CBVTimelapse/"
 TMP_DIR = "/tmp"
 BLACK_THRESHOLD = 1000.0
 CONVERT = "convert"
 BUCKET = "timelapse.capebernier.com.au"
 AWS_KEY = ""
 AWS_SECRET = ""
+GP_PASSWORD = ""
 REGION = "s3-ap-southeast-2.amazonaws.com"
-BASE_DEST = "/mnt/media/Photos/CBVTimelapse/"
+BASE_DEST = "/Volumes/Data/Photos/CBVTimelapse/"
 
 def hello():
     print "hello"
@@ -96,7 +98,7 @@ def get_media_filesystem(base_dir):
     dirlist = os.listdir(base_dir)
     dirs = []
     for d in dirlist:
-        if os.path.isdir(os.path.join(base_dir, d )):
+        if os.path.isdir(os.path.join(base_dir, d )) and d[-5:] == "GOPRO":
             dirs.append(d)
 
     threads = []
@@ -107,6 +109,26 @@ def get_media_filesystem(base_dir):
             threads.append(t)
             t.start()
             #process_images(imgs, base_dir, d)
+
+def images_left():
+    camera = goprohero.GoProHero()
+    camera.password(GP_PASSWORD)
+    try:
+        status = camera.status()
+        if status["npics"] > 0:
+            return status["npics"]
+        else:
+            return 0
+    except:
+        # Only return False if we are sure
+        print "Error getting status"
+        return -1
+
+
+def delete_all():
+    camera = goprohero.GoProHero()
+    camera.password(GP_PASSWORD)
+    camera.command("delete_all")
 
 
 
@@ -148,11 +170,25 @@ def get_media(dir_list):
                             p = os.path.join(LOCAL_DIR, os.path.dirname(path))
                             try:
                                 os.makedirs(p)
-                                print "Copy to {}".format(path)
-                                shutil.copy2(tmp_path, path)
                                 # Note tmpfile just gets written over on the next one
                             except:
                                 pass
+                            print "Copy to {}".format(path)
+                            shutil.copy2(tmp_path, path)
+
+
+def run_loop():
+    camera = goprohero.GoProHero()
+    camera.password(GP_PASSWORD)
+    while True:
+        camera.command("record","on")
+        # Need to wait before photo is on disk
+        time.sleep(20)
+        camera.command("record","off")
+        get_media(get_media_dirs())
+        print images_left()
+        camera.command("delete_all")
+        time.sleep(5)
 
 
 #get_media(get_media_dirs())
