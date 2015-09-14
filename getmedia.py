@@ -9,17 +9,21 @@ import shutil
 import exifread
 import threading
 import goprohero
+import ConfigParser
 
-LOCAL_DIR = "/Volumes/Data/Photos/CBVTimelapse/"
-TMP_DIR = "/tmp"
-BLACK_THRESHOLD = 1000.0
-CONVERT = "convert"
-BUCKET = "timelapse.capebernier.com.au"
-AWS_KEY = ""
-AWS_SECRET = ""
-GP_PASSWORD = ""
-REGION = "s3-ap-southeast-2.amazonaws.com"
-BASE_DEST = "/Volumes/Data/Photos/CBVTimelapse/"
+config = ConfigParser.ConfigParser()
+config.readfp(open('config.cfg'))
+
+LOCAL_DIR = config.get("config","local_dir")
+TMP_DIR = config.get("config","tmp_dir")
+BLACK_THRESHOLD = config.getfloat("config","black_threshold")
+CONVERT = config.get("config","convert_program")
+BUCKET = config.get("config","s3_bucket")
+AWS_KEY = config.get("config","aws_key")
+AWS_SECRET = config.get("config","aws_secret")
+GP_PASSWORD = config.get("config","gopro_password")
+REGION = config.get("config","aws_region")
+BASE_DEST = config.get("config","base_dest_dir")
 
 def hello():
     print "hello"
@@ -125,6 +129,14 @@ def images_left():
         return -1
 
 
+def upload_latest():
+    # Just uploads the last tmpfile
+    tmpfile = os.path.join(TMP_DIR, "tmpfile.jpg")
+    target_key = "latest.jpg"
+    t = threading.Thread(target=s3_upload, args=(tmpfile, target_key))
+    t.start()
+
+
 def delete_all():
     camera = goprohero.GoProHero()
     camera.password(GP_PASSWORD)
@@ -154,7 +166,7 @@ def get_media(dir_list):
 
                     if resp.status_code == 200:
 
-                        tmp_path = "{}/tmpfile.jpg".format(TMP_DIR)
+                        tmp_path = os.path.join(TMP_DIR, "tmpfile.jpg")
                         print "Writing to {}".format(tmp_path)
                         #Write to temp file
                         with open(tmp_path, 'wb') as f:
@@ -166,7 +178,7 @@ def get_media(dir_list):
                             print ("Image too black")
                         else:
                             t = get_created_path(tmp_path)
-                            path = "{}/{}".format(LOCAL_DIR, t)
+                            path = os.path.join(LOCAL_DIR, t)
                             p = os.path.join(LOCAL_DIR, os.path.dirname(path))
                             try:
                                 os.makedirs(p)
@@ -181,12 +193,13 @@ def run_loop():
     camera = goprohero.GoProHero()
     camera.password(GP_PASSWORD)
     while True:
-        camera.command("record","on")
+        camera.command("record", "on")
         # Need to wait before photo is on disk
         time.sleep(20)
-        camera.command("record","off")
+        camera.command("record", "off")
         get_media(get_media_dirs())
         print images_left()
+        upload_latest()
         camera.command("delete_all")
         time.sleep(5)
 
