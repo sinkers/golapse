@@ -132,9 +132,11 @@ def images_left():
 def upload_latest():
     # Just uploads the last tmpfile
     tmpfile = os.path.join(TMP_DIR, "tmpfile.jpg")
-    target_key = "latest.jpg"
-    t = threading.Thread(target=s3_upload, args=(tmpfile, target_key))
-    t.start()
+    if not img_black(tmpfile):
+        target_key = "latest.jpg"
+        print "Uploading latest to S3"
+        t = threading.Thread(target=s3_upload, args=(tmpfile, target_key))
+        t.start()
 
 
 def delete_all():
