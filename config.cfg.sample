@@ -9,3 +9,4 @@ aws_region = s3-ap-southeast-2.amazonaws.com
 gopro_password =
 base_dest_dir = /Volumes/Data/Photos/CBVTimelapse/
 convert_program = convert
+sleep_time = 20

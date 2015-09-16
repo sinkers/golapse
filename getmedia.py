@@ -24,6 +24,7 @@ AWS_SECRET = config.get("config","aws_secret")
 GP_PASSWORD = config.get("config","gopro_password")
 REGION = config.get("config","aws_region")
 BASE_DEST = config.get("config","base_dest_dir")
+SLEEP_TIME = config.get("config","sleep_time")
 
 def hello():
     print "hello"
@@ -197,12 +198,14 @@ def run_loop():
     while True:
         camera.command("record", "on")
         # Need to wait before photo is on disk
-        time.sleep(20)
+        time.sleep(SLEEP_TIME)
         camera.command("record", "off")
         get_media(get_media_dirs())
         print images_left()
         upload_latest()
         camera.command("delete_all")
+        # Just a little extra wait for delete to finish as may take some time depending on size and how full
+        # card was
         time.sleep(5)
 
 
