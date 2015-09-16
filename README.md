@@ -14,3 +14,5 @@ Upcoming features
 * Convert previous period photos to a video timelapse
 * Upload timelapse videos
 * Archive old footage as a more efficient h265 or VP9 given change between images is mostly low
+* Make the network connection particularly to the GoPro more robust and able to auto start
+* Add logging
