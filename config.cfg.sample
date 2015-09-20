@@ -10,3 +10,6 @@ gopro_password =
 base_dest_dir = /Volumes/Data/Photos/CBVTimelapse/
 convert_program = convert
 sleep_time = 20
+alert_email = 20
+sendgrid_user = 
+sendgrid_key = 

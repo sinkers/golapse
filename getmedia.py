@@ -10,6 +10,7 @@ import exifread
 import threading
 import goprohero
 import ConfigParser
+import sendgrid
 
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
@@ -25,9 +26,50 @@ GP_PASSWORD = config.get("config","gopro_password")
 REGION = config.get("config","aws_region")
 BASE_DEST = config.get("config","base_dest_dir")
 SLEEP_TIME = config.get("config","sleep_time")
+ALERT_EMAIL = config.get("config","alert_email")
+SENDGRID_USER = config.get("config","sendgrid_user")
+SENDGRID_KEY = config.get("config","sendgrid_key")
+MAX_ERRORS = config.getint("config","max_errors")
 
-def hello():
-    print "hello"
+# Used for tracking consecutive errors
+error_count = 0
+
+def run_command(option, cmd, holdoff=0):
+    global error_count
+    time.sleep(holdoff)
+    print "%s %s" % (error_count, MAX_ERRORS)
+    if error_count > MAX_ERRORS:
+        print "Too many errors exiting"
+        send_email("Uh oh too many errors running camera commands. Camera not responding")
+        error_count = 0
+        return False
+        # Raise some kind of alert
+    
+    camera = goprohero.GoProHero()
+    camera.password(GP_PASSWORD)
+    try:
+        result = camera.command(option, cmd)
+        if result == False:
+            print "Error processing command was False %s %s" % (option, cmd)
+            error_count += 1
+            run_command(option, cmd, error_count*10)
+        else:
+            error_count = 0
+            return True
+    except:
+        print "Error processing command exception %s %s" % (option, cmd)
+        error_count += 1
+        run_command(option, cmd, error_count*10)
+
+def send_email(message_txt):
+    sg = sendgrid.SendGridClient(SENDGRID_USER, SENDGRID_KEY)
+    message = sendgrid.Mail()
+    message.add_to(ALERT_EMAIL)
+    message.set_from(SENDGRID_USER)
+    message.set_subject("GoLapse Alert")
+    message.set_html(message_txt)
+    sg.send(message)
+    return True
 
 def s3_upload(file_name, key):
     # Creates a new file with just the file name at root of bucket
@@ -163,7 +205,7 @@ def get_media(dir_list):
                 if search_obj:
                     last_photo = search_obj.group()
                 if last_photo:
-                    print "http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo)
+                    print "Getting image http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo)
                     resp = requests.get("http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo), stream=True)
                     print resp.status_code
 
@@ -193,17 +235,15 @@ def get_media(dir_list):
 
 
 def run_loop():
-    camera = goprohero.GoProHero()
-    camera.password(GP_PASSWORD)
     while True:
-        camera.command("record", "on")
+        run_command("record", "on")
         # Need to wait before photo is on disk
         time.sleep(SLEEP_TIME)
-        camera.command("record", "off")
+        run_command("record", "off")
         get_media(get_media_dirs())
         print images_left()
         upload_latest()
-        camera.command("delete_all")
+        run_command("delete_all")
         # Just a little extra wait for delete to finish as may take some time depending on size and how full
         # card was
         time.sleep(5)
