@@ -243,7 +243,7 @@ def run_loop():
         get_media(get_media_dirs())
         print images_left()
         upload_latest()
-        run_command("delete_all")
+        run_command("delete_all","")
         # Just a little extra wait for delete to finish as may take some time depending on size and how full
         # card was
         time.sleep(5)
