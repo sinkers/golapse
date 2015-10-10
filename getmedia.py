@@ -37,7 +37,7 @@ error_count = 0
 def run_command(option, cmd, holdoff=0):
     global error_count
     time.sleep(holdoff)
-    print "%s %s" % (error_count, MAX_ERRORS)
+    print "Errors: %s Max Errors: %s" % (error_count, MAX_ERRORS)
     if error_count > MAX_ERRORS:
         print "Too many errors exiting"
         send_email("Uh oh too many errors running camera commands. Camera not responding")
@@ -207,7 +207,7 @@ def get_media(dir_list):
                 if last_photo:
                     print "Getting image http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo)
                     resp = requests.get("http://10.5.5.9:8080/videos/DCIM/{}/{}".format(item, last_photo), stream=True)
-                    print resp.status_code
+                    print "Status on getting image: %s" % resp.status_code
 
                     if resp.status_code == 200:
 
@@ -236,6 +236,8 @@ def get_media(dir_list):
 
 def run_loop():
     while True:
+        run_command("power", "on")
+        time.sleep(SLEEP_TIME)
         run_command("record", "on")
         # Need to wait before photo is on disk
         time.sleep(SLEEP_TIME)
@@ -246,6 +248,7 @@ def run_loop():
         run_command("delete_all","")
         # Just a little extra wait for delete to finish as may take some time depending on size and how full
         # card was
+        run_command("power", "sleep")
         time.sleep(5)
 
 

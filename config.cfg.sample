@@ -12,4 +12,5 @@ convert_program = convert
 sleep_time = 20
 alert_email = 20
 sendgrid_user = 
-sendgrid_key = 
+sendgrid_key =
+max_errors = 5
