@@ -42,8 +42,7 @@ def run_command(option, cmd, holdoff=0):
         print "Too many errors exiting"
         send_email("Uh oh too many errors running camera commands. Camera not responding")
         error_count = 0
-        return False
-        # Raise some kind of alert
+        return True
     
     camera = goprohero.GoProHero()
     camera.password(GP_PASSWORD)

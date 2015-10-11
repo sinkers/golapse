@@ -16,3 +16,4 @@ Upcoming features
 * Archive old footage as a more efficient h265 or VP9 given change between images is mostly low
 * Make the network connection particularly to the GoPro more robust and able to auto start
 * Add logging
+* Make it so that after so many black images it powers off for some time but powers on before first light
