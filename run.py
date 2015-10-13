@@ -1,4 +1,9 @@
 import getmedia
 
 while True:
-	getmedia.run_loop()
+    try:
+       getmedia.run_loop()
+    except KeyboardInterrupt:
+        break
+    except:
+        pass

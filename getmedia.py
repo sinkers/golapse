@@ -51,6 +51,7 @@ def run_command(option, cmd, holdoff=0):
         if result == False:
             print "Error processing command was False %s %s" % (option, cmd)
             error_count += 1
+            camera = None
             run_command(option, cmd, error_count*10)
         else:
             error_count = 0
@@ -234,21 +235,20 @@ def get_media(dir_list):
 
 
 def run_loop():
-    while True:
-        run_command("power", "on")
-        time.sleep(SLEEP_TIME)
-        run_command("record", "on")
-        # Need to wait before photo is on disk
-        time.sleep(SLEEP_TIME)
-        run_command("record", "off")
-        get_media(get_media_dirs())
-        print images_left()
-        upload_latest()
-        run_command("delete_all","")
-        # Just a little extra wait for delete to finish as may take some time depending on size and how full
-        # card was
-        run_command("power", "sleep")
-        time.sleep(5)
+    run_command("power", "on")
+    run_command("mode", "still")
+    time.sleep(10)
+    run_command("record", "on")
+    # Need to wait before photo is on disk
+    time.sleep(30)
+    get_media(get_media_dirs())
+    print images_left()
+    upload_latest()
+    run_command("delete_all","")
+    # Just a little extra wait for delete to finish as may take some time depending on size and how full
+    # card was
+    run_command("power", "sleep")
+    time.sleep(SLEEP_TIME)
 
 
 #get_media(get_media_dirs())
