@@ -231,23 +231,29 @@ def get_media(dir_list):
                             except:
                                 pass
                             print "Copy to {}".format(path)
+                            #TODO move this function
                             shutil.copy2(tmp_path, path)
 
 
 def run_loop():
-    run_command("power", "on")
-    run_command("mode", "still")
+    camera = goprohero.GoProHero()
+    camera.password(GP_PASSWORD)
+    status = camera.status()
+    if status["power"] != "on":
+        camera.command("power", "on")
+    if status["mode"] != "still":
+        camera.command("mode", "still")
     time.sleep(10)
-    run_command("record", "on")
+    camera.command("record", "on")
     # Need to wait before photo is on disk
     time.sleep(30)
     get_media(get_media_dirs())
-    print images_left()
+    #print images_left()
     upload_latest()
     run_command("delete_all","")
     # Just a little extra wait for delete to finish as may take some time depending on size and how full
     # card was
-    run_command("power", "sleep")
+    camera.command("power", "sleep")
     time.sleep(SLEEP_TIME)
 
 
