@@ -12,7 +12,7 @@ import goprohero
 import ConfigParser
 import sendgrid
 import wireless
-#import sys
+import sys
 
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
@@ -218,10 +218,13 @@ def get_media(dir_list):
                         print "Writing to {}".format(tmp_path)
                         #Write to temp file
                         with open(tmp_path, 'wb') as f:
+                            total_size = float(resp.headers["content-length"])
+                            total_read = 0
                             for chunk in resp:
                                 f.write(chunk)
-                                #sys.stdout.write("Writing: %d%%   \r" % (progress) )
-                                #sys.stdout.flush()
+                                total_read += float(len(chunk))
+                                progress = float(total_read/total_size) * 100
+                                sys.stdout.write("%.2f\r" % progress)
                         f.close()
                         # Delete image if black
                         if img_black(tmp_path):
@@ -257,7 +260,7 @@ def run_loop():
     else:
         if status["power"] != "on":
             camera.command("power", "on")
-            time.sleep(SLEEP_TIME)
+            time.sleep(10)
         if status["overheated"] != "false":
             send_email("Camera has overheated!")
             time.sleep(SLEEP_TIME)
