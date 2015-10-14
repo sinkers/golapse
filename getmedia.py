@@ -11,6 +11,8 @@ import threading
 import goprohero
 import ConfigParser
 import sendgrid
+import wireless
+#import sys
 
 config = ConfigParser.ConfigParser()
 config.readfp(open('config.cfg'))
@@ -22,6 +24,7 @@ CONVERT = config.get("config","convert_program")
 BUCKET = config.get("config","s3_bucket")
 AWS_KEY = config.get("config","aws_key")
 AWS_SECRET = config.get("config","aws_secret")
+GP_AP = config.get("config","gopro_ap")
 GP_PASSWORD = config.get("config","gopro_password")
 REGION = config.get("config","aws_region")
 BASE_DEST = config.get("config","base_dest_dir")
@@ -217,6 +220,8 @@ def get_media(dir_list):
                         with open(tmp_path, 'wb') as f:
                             for chunk in resp:
                                 f.write(chunk)
+                                #sys.stdout.write("Writing: %d%%   \r" % (progress) )
+                                #sys.stdout.flush()
                         f.close()
                         # Delete image if black
                         if img_black(tmp_path):
@@ -239,22 +244,37 @@ def run_loop():
     camera = goprohero.GoProHero()
     camera.password(GP_PASSWORD)
     status = camera.status()
-    if status["power"] != "on":
-        camera.command("power", "on")
-    if status["mode"] != "still":
-        camera.command("mode", "still")
-    time.sleep(10)
-    camera.command("record", "on")
-    # Need to wait before photo is on disk
-    time.sleep(30)
-    get_media(get_media_dirs())
-    #print images_left()
-    upload_latest()
-    run_command("delete_all","")
-    # Just a little extra wait for delete to finish as may take some time depending on size and how full
-    # card was
-    camera.command("power", "sleep")
-    time.sleep(SLEEP_TIME)
+
+    if status["summary"] == "notfound":
+        print "Camera not found, try connecting to wifi"
+
+        # Try connecting to it
+        wifi = wireless.Wireless()
+        wifi.connect(ssid=GP_AP, password=GP_PASSWORD)
+        if wifi.current != GP_AP:
+            send_email("Camera not found using status and unable to connect to it via wifi")
+        time.sleep(10)
+    else:
+        if status["power"] != "on":
+            camera.command("power", "on")
+            time.sleep(SLEEP_TIME)
+        if status["overheated"] != "false":
+            send_email("Camera has overheated!")
+            time.sleep(SLEEP_TIME)
+        if status["mode"] != "still":
+            camera.command("mode", "still")
+        time.sleep(10)
+        camera.command("record", "on")
+        # Need to wait before photo is on disk
+        time.sleep(10)
+        get_media(get_media_dirs())
+        #print images_left()
+        upload_latest()
+        run_command("delete_all","")
+        # Just a little extra wait for delete to finish as may take some time depending on size and how full
+        # card was
+        camera.command("power", "sleep")
+        time.sleep(SLEEP_TIME)
 
 
 #get_media(get_media_dirs())
