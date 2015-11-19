@@ -1,4 +1,5 @@
 import getmedia
+import traceback
 
 while True:
 	try:	
@@ -6,4 +7,6 @@ while True:
 	except KeyboardInterrupt:
 		break
 	except:
+		print "Exception occured"
+		traceback.print_exc()
 		pass

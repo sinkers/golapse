@@ -3,6 +3,7 @@ import time
 import re
 import subprocess
 from boto.s3.connection import S3Connection
+from boto.s3.connection import OrdinaryCallingFormat
 from boto.s3.key import Key
 import os
 import shutil
@@ -76,7 +77,7 @@ def send_email(message_txt):
 
 def s3_upload(file_name, key):
     # Creates a new file with just the file name at root of bucket
-    conn = S3Connection(AWS_KEY, AWS_SECRET, host=REGION)
+    conn = S3Connection(AWS_KEY, AWS_SECRET, host=REGION, calling_format=OrdinaryCallingFormat())
     bucket = conn.get_bucket(BUCKET)
     k = Key(bucket)
     # create a key for the new file
@@ -112,7 +113,9 @@ def img_black(img):
     cmd = [CONVERT, img, '-format', '"%[mean]"', 'info:']
     try:
         # Note the output from convert may vary a bit, TODO add regex
-        result = float(subprocess.check_output(cmd)[1:-2])
+        print " ".join(cmd)
+	result = float(subprocess.check_output(cmd)[1:-2])
+	print "Blackness: %s" % result
         if result < BLACK_THRESHOLD:
             return True
         else:
@@ -261,11 +264,11 @@ def run_loop():
         if status["power"] != "on":
             camera.command("power", "on")
             time.sleep(10)
-        if status["overheated"] != "false":
-            send_email("Camera has overheated!")
-            time.sleep(SLEEP_TIME)
-        if status["mode"] != "still":
-            camera.command("mode", "still")
+        #if status["overheated"] != "false":
+        #    send_email("Camera has overheated!")
+        #    time.sleep(SLEEP_TIME)
+        #if status["mode"] != "still":
+        #    camera.command("mode", "still")
         time.sleep(10)
         camera.command("record", "on")
         # Need to wait before photo is on disk
