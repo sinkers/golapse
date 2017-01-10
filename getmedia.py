@@ -16,7 +16,7 @@ import wireless
 import sys
 
 config = ConfigParser.ConfigParser()
-config.readfp(open('config.cfg'))
+config.readfp(open('/home/pi/golapse/config.cfg'))
 
 LOCAL_DIR = config.get("config","local_dir")
 TMP_DIR = config.get("config","tmp_dir")
@@ -31,8 +31,7 @@ REGION = config.get("config","aws_region")
 BASE_DEST = config.get("config","base_dest_dir")
 SLEEP_TIME = config.getfloat("config","sleep_time")
 ALERT_EMAIL = config.get("config","alert_email")
-SENDGRID_USER = config.get("config","sendgrid_user")
-SENDGRID_KEY = config.get("config","sendgrid_key")
+SENDGRID_KEY = config.get("config","sendgrid_api_key")
 MAX_ERRORS = config.getint("config","max_errors")
 
 # Used for tracking consecutive errors
@@ -66,10 +65,10 @@ def run_command(option, cmd, holdoff=0):
         run_command(option, cmd, error_count*10)
 
 def send_email(message_txt):
-    sg = sendgrid.SendGridClient(SENDGRID_USER, SENDGRID_KEY)
+    sg = sendgrid.SendGridClient(SENDGRID_KEY)
     message = sendgrid.Mail()
     message.add_to(ALERT_EMAIL)
-    message.set_from(SENDGRID_USER)
+    message.set_from(ALERT_EMAIL)
     message.set_subject("GoLapse Alert")
     message.set_html(message_txt)
     sg.send(message)
@@ -253,7 +252,7 @@ def run_loop():
 
     if status["summary"] == "notfound":
         print "Camera not found, try connecting to wifi"
-
+        send_email("Problem connecting to camera")
         # Try connecting to it
         wifi = wireless.Wireless()
         wifi.connect(ssid=GP_AP, password=GP_PASSWORD)
@@ -270,7 +269,9 @@ def run_loop():
         #if status["mode"] != "still":
         #    camera.command("mode", "still")
         time.sleep(10)
-        camera.command("record", "on")
+        recording = camera.command("record", "on")
+        if not recording:
+            send_email("Unable to start recording")
         # Need to wait before photo is on disk
         time.sleep(10)
         get_media(get_media_dirs())
