@@ -16,7 +16,7 @@ import wireless
 import sys
 
 config = ConfigParser.ConfigParser()
-config.readfp(open('/home/pi/golapse/config.cfg'))
+config.readfp(open('config.cfg'))
 
 LOCAL_DIR = config.get("config","local_dir")
 TMP_DIR = config.get("config","tmp_dir")
@@ -87,6 +87,9 @@ def s3_upload(file_name, key):
     k.set_acl('public-read')
     #only return the url part as we have made it public
     url = k.generate_url(0,'GET',force_http=True)
+    # Make a copy of the file as future storage
+    new_key = get_created_path(file_name)
+    bucket.copy_key(new_key, BUCKET, key)
     return url.split('?')[0]
 
 def local_copy(local_img, new_img, base_dir):
@@ -181,7 +184,7 @@ def upload_latest():
     # Just uploads the last tmpfile
     tmpfile = os.path.join(TMP_DIR, "tmpfile.jpg")
     if not img_black(tmpfile):
-        target_key = "latest.jpg"
+        target_key = "latest_test.jpg"
         print "Uploading latest to S3"
         t = threading.Thread(target=s3_upload, args=(tmpfile, target_key))
         t.start()
