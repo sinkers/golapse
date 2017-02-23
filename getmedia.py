@@ -184,7 +184,7 @@ def upload_latest():
     # Just uploads the last tmpfile
     tmpfile = os.path.join(TMP_DIR, "tmpfile.jpg")
     if not img_black(tmpfile):
-        target_key = "latest_test.jpg"
+        target_key = "latest.jpg"
         print "Uploading latest to S3"
         t = threading.Thread(target=s3_upload, args=(tmpfile, target_key))
         t.start()
